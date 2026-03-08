@@ -47,8 +47,13 @@ def set_seed(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+
+    if torch.backends.cudnn.is_available():
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def moving_average(values: List[float], window: int = 50) -> List[float]:
@@ -162,7 +167,14 @@ def plot_agent_history(history: Dict, save_dir: str, window: int = 50) -> None:
     )
 
 
-def plot_overlay(histories: Dict[str, Dict], save_path: str, metric_key: str, title: str, ylabel: str, window: int = 50) -> None:
+def plot_overlay(
+    histories: Dict[str, Dict],
+    save_path: str,
+    metric_key: str,
+    title: str,
+    ylabel: str,
+    window: int = 50,
+) -> None:
     """
     Plots the same metric for multiple agents on a single figure.
 
@@ -190,7 +202,7 @@ def plot_overlay(histories: Dict[str, Dict], save_path: str, metric_key: str, ti
 
 def maybe_create_comparison_plots(config: Dict) -> None:
     """
-    Creates overlaid comparison plots if all three history files exist.
+    Creates overlaid comparison plots if at least two history files exist.
 
     Args:
         config (Dict): Full configuration dictionary.
