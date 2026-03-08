@@ -150,7 +150,7 @@ Run the following command to confirm that the environment is set up correctly:
 ```bash
 python -c "
 from training_script import make_mario_env
-env = make_mario_env('SuperMarioBros-1-1-v3', render_mode=None, seed=42)
+env, obs_shape, action_size = make_mario_env('SuperMarioBros-1-1-v3', render_mode=None, seed=42)
 obs, info = env.reset()
 import numpy as np
 obs = np.array(obs)
