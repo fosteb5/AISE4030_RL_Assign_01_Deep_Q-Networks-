@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import torch; print\\(''PyTorch:'', torch.__version__\\); print\\(''CUDA available:'', torch.cuda.is_available\\(\\)\\); print\\(''CUDA version:'', torch.version.cuda\\)\")",
+      "Read(//c/Users/gibbd/miniconda3/envs/**)",
+      "Read(//c/Users/gibbd/anaconda3/**)",
+      "Bash(conda env:*)",
+      "Bash(python -c \"import torch; print\\(''PyTorch:'', torch.__version__\\); print\\(''CUDA available:'', torch.cuda.is_available\\(\\)\\)\")",
+    ]
+  }
+}

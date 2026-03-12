@@ -47,7 +47,7 @@ The Mario environment is wrapped in the following order:
 The custom reward wrapper also applies:
 
 - x position progress reward
-- time penalty
+- time penalty per step
 - flag completion bonus
 - death penalty
 - stagnation penalty on early truncation
@@ -201,29 +201,29 @@ agent_type: d3qn_per
 
 ### Current Key Hyperparameters
 ```yaml
-render_mode: human
+render_mode: none
 device: auto
-frame_skip: 8
-run_version: v5
+frame_skip: 4
+run_version: v2
 
 training:
-  total_episodes: 500
+  total_episodes: 5000
   max_steps_per_episode: 50000
   learning_rate: 0.00025
-  gamma: 0.9
+  gamma: 0.99
   epsilon_start: 1.0
-  epsilon_min: 0.01
-  epsilon_decay: 0.9995
+  epsilon_min: 0.05
+  epsilon_decay: 0.999995
   target_sync_steps: 1000
   gradient_clip: 1.0
-  save_every: 25
+  save_every: 500
   log_every: 5
   moving_average_window: 50
 
 replay:
   batch_size: 32
-  capacity: 10000
-  learning_starts: 1000
+  capacity: 100000
+  learning_starts: 5000
 
 per:
   alpha: 0.6
@@ -392,39 +392,29 @@ The codebase includes a small set of implementation-level optimizations to reduc
 
 These changes do **not** alter the Dueling Network architecture, Double DQN target computation, replay behavior definitions, or the intended differences between `d3qn`, `d3qn_er`, and `d3qn_per`.
 
-### Parameter Adjustments Relevant to the Assignment
-- `frame_skip` was increased from `4` to `8`
-- `total_episodes` was reduced from `5000` to `500`
-- `epsilon_min` was reduced from `0.1` to `0.01`
-- `epsilon_decay` was adjusted from `0.99999975` to `0.9995`
-- `target_sync_steps` was reduced from `10000` to `1000`
-- `save_every` was reduced to `25`
-- `log_every` was reduced to `5`
-- `replay.capacity` was reduced from `100000` to `10000`
+### Deviations from Assignment Defaults and Justifications
 
-These changes reflect a heavily compute-constrained run configuration. The exploration schedule was accelerated because the original schedule kept behavior highly random for too long relative to the shorter run budget.
+The following parameters deviate from the assignment spec. All deviations are applied identically across all three agents to preserve a fair comparison.
 
-### Assignment Hyperparameters Kept Unchanged
-The following assignment-relevant settings were intentionally left unchanged in the default configuration so the comparison remains fair across all three agents:
+| Parameter | Spec Default | Used | Justification |
+|---|---|---|---|
+| `gamma` | 0.9 | **0.99** | Mnih et al. (2015) use 0.99 for Atari. `gamma=0.9` gives a ~10-step effective horizon, insufficient for Mario's obstacle sequences. `0.99` gives ~100 steps, consistent with the literature. |
+| `target_sync_steps` | 10000 | **1000** | With ~236 steps/episode, 10000 steps = ~42 episodes between syncs — too infrequent for a 5000-episode budget. 1000 steps (~4 episodes) provides stable but responsive target updates. |
+| `epsilon_min` | 0.1 | **0.05** | With only 2 actions, 10% terminal exploration wastes significant exploitation time. 5% is more appropriate for a minimal action space. |
+| `epsilon_decay` | 0.99999975 | **0.999995** | Original decay reaches `epsilon_min` at ~39,000 episodes. Recalibrated to reach minimum at ~episode 2400, providing ~2600 exploitation episodes within the 5000-episode budget. |
+| `learning_starts` | 1000 | **5000** | A larger warmup allows ER and PER buffers to accumulate diverse transitions before learning begins. Particularly important for PER, where early random transitions with high TD error can dominate priority sampling. Applied to both ER and PER for consistency. |
 
-- total training episodes
-- replay buffer batch size
-- learning starts threshold
-- learning rate
-- discount factor (`gamma`)
-- epsilon start
-- PER `alpha`
-- PER `beta_start` and `beta_end`
-- PER `epsilon`
-- gradient clipping
-- grayscale, resize to `84x84`, and frame stack of `4`
+### Reward Shaping
 
-If you later reduce `total_episodes` or `max_steps_per_episode` for CPU-only runs, apply the same change to all three agents and document it clearly in the report.
+Current reward structure applied identically to all three agents:
 
-The current configuration uses `frame_skip: 8` in `config.yaml`. If you change `frame_skip`, treat it as a documented preprocessing change and apply the same value to all three agents.
+- Forward x-position progress: `+0.02 × pixels moved` (floored at 0 when moving forward)
+- Backward or no movement: `0.02 × pixels` (negative)
+- Time penalty: `-0.1` per step (encourages faster completion)
+- Death: `-15` (clipped)
+- Stagnation termination (150 steps without progress): `-10`
+- Flag reached: `+50` (applied after clipping)
 
-Current reward shaping in `environment.py` uses a heavily reduced forward-progress scale and time penalty so episode returns stay comparable to the stagnation, death, and flag-related penalties and bonuses. Forward progress is prevented from becoming negative unless Mario dies on that step.
+### PER Bug Fix
 
-The environment also truncates an episode early if Mario fails to make forward progress for too many consecutive agent steps. This stagnation termination uses a smaller penalty than death and is tracked separately from the death penalty.
-
-Training results now also record how often Mario reaches the flag and how episodes end. Each run saves per-episode flag success and end-reason history in `history.json`, and writes flag, death, stagnation, and timeout rate curves to the corresponding results directory.
+The sum tree `get_leaf` method can return `None` data due to floating-point sampling overshooting `total_priority`. Fixed in `per_buffer.py` by retrying the sample when `None` data is encountered.

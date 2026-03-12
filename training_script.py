@@ -244,6 +244,10 @@ def train() -> None:
         history = resumed_history
         print(f"Resuming from episode {start_episode} using {os.path.basename(resumed_checkpoint)}")
 
+    if torch.cuda.is_available():
+        print(f"[GPU] Training on GPU: {torch.cuda.get_device_name(0)}")
+    else:
+        print("[CPU] CUDA not available - training on CPU")
     print(f"Training agent: {config['agent_type']}")
     print(f"Device: {agent.device}")
     print(f"Observation shape: {state_shape}")

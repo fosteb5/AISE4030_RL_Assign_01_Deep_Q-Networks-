@@ -73,9 +73,7 @@ class D3QNERAgent(D3QNAgent):
         Returns:
             Dict: Agent checkpoint state.
         """
-        checkpoint = super().get_checkpoint_state()
-        checkpoint["replay_buffer_state"] = self.replay_buffer.state_dict()
-        return checkpoint
+        return super().get_checkpoint_state()
 
     def load_checkpoint_state(self, checkpoint: Dict) -> None:
         """
@@ -85,4 +83,3 @@ class D3QNERAgent(D3QNAgent):
             checkpoint (Dict): Agent checkpoint state.
         """
         super().load_checkpoint_state(checkpoint)
-        self.replay_buffer.load_state_dict(checkpoint["replay_buffer_state"])

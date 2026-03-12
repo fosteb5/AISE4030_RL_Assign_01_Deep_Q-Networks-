@@ -60,7 +60,7 @@ class MarioRewardWrapper(gym.Wrapper):
     def __init__(
         self,
         env: gym.Env,
-        progress_scale: float = 0.0250,
+        progress_scale: float = 0.03,
         time_penalty: float = -0.005,
         flag_reward: float = 50.0,
         death_penalty: float = -15.0,
@@ -71,7 +71,7 @@ class MarioRewardWrapper(gym.Wrapper):
         Args:
             env (gym.Env): The base environment.
             progress_scale (float): Reward multiplier for forward x-position progress.
-            time_penalty (float): Constant penalty applied each step.
+            time_penalty (float): Small penalty applied every step to encourage speed.
             flag_reward (float): Bonus reward applied when Mario reaches the flag.
             death_penalty (float): Penalty applied when Mario dies.
         """
@@ -111,19 +111,17 @@ class MarioRewardWrapper(gym.Wrapper):
         self.prev_x = current_x
 
         progress_reward = self.progress_scale * float(delta_x)
-        if delta_x > 0:
-            reward = max(progress_reward + self.time_penalty, 0.0)
-        else:
-            reward = progress_reward + self.time_penalty
-
-        if bool(info.get("flag_get", False)):
-            reward += self.flag_reward
+        reward = max(progress_reward, 0.0) if delta_x > 0 else progress_reward
+        reward += self.time_penalty
 
         died = terminated and not bool(info.get("flag_get", False))
         if died:
             reward += self.death_penalty
 
         reward = float(np.clip(reward, -15.0, 15.0))
+
+        if bool(info.get("flag_get", False)):
+            reward += self.flag_reward
         return obs, reward, terminated, truncated, info
 
 

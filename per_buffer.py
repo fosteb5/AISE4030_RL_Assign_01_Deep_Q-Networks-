@@ -233,8 +233,10 @@ class PrioritizedReplayBuffer:
         for i in range(batch_size):
             start = segment * i
             end = segment * (i + 1)
-            value = random.uniform(start, end)
-            index, priority, data = self.tree.get_leaf(value)
+            data = None
+            while data is None:
+                value = min(random.uniform(start, end), total_priority - 1e-6)
+                index, priority, data = self.tree.get_leaf(value)
             indices.append(index)
             priorities.append(priority)
             batch.append(data)
