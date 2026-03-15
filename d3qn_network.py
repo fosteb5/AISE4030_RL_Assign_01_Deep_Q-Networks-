@@ -53,10 +53,10 @@ class D3QNNetwork(nn.Module):
         Computes the flattened feature size after the convolutional backbone.
 
         Args:
-            input_shape (Tuple[int, int, int]): Input observation shape.
+            input_shape (Tuple[int, int, int]): Input observation shape (C, H, W).
 
         Returns:
-            int: Flattened feature dimension.
+            int: Flattened feature dimension after convolutions.
         """
         with torch.no_grad():
             sample = torch.zeros(1, *input_shape, dtype=torch.float32)

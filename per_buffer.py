@@ -182,15 +182,18 @@ class PrioritizedReplayBuffer:
         priority: Optional[float] = None,
     ) -> None:
         """
-        Adds a transition to the PER buffer.
+        Adds a transition to the PER buffer with an initial priority.
 
         Args:
-            state (np.ndarray): Current state.
-            action (int): Selected action.
-            reward (float): Received reward.
-            next_state (np.ndarray): Next state.
-            done (bool): Terminal flag.
-            priority (Optional[float]): Optional initial priority.
+            state (np.ndarray): Current state observation.
+            action (int): Index of selected action.
+            reward (float): Received reward value.
+            next_state (np.ndarray): Resulting state observation.
+            done (bool): Terminal flag for the transition.
+            priority (Optional[float]): Initial priority. Defaults to max_priority if None.
+
+        Returns:
+            None
         """
         if priority is None:
             priority = self.max_priority
@@ -213,7 +216,7 @@ class PrioritizedReplayBuffer:
 
     def sample(self, batch_size: int, beta: float):
         """
-        Samples a mini batch proportional to priority.
+        Samples a mini batch proportional to priority with IS weights.
 
         Args:
             batch_size (int): Number of transitions to sample.
@@ -221,7 +224,8 @@ class PrioritizedReplayBuffer:
 
         Returns:
             tuple:
-                states, actions, rewards, next_states, dones, indices, weights
+                A tuple containing (states (np.ndarray), actions (np.ndarray), rewards (np.ndarray), 
+                next_states (np.ndarray), dones (np.ndarray), indices (np.ndarray), weights (np.ndarray)).
         """
         indices: List[int] = []
         priorities: List[float] = []

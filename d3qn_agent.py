@@ -57,10 +57,10 @@ class D3QNAgent:
         Resolves the torch device from config.
 
         Args:
-            device_name (str): Requested device string.
+            device_name (str): Requested device string (e.g., 'cpu', 'cuda', 'auto').
 
         Returns:
-            torch.device: Active torch device.
+            torch.device: The resolved active torch device.
         """
         if device_name == "auto":
             return torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,12 +69,24 @@ class D3QNAgent:
     def _update_epsilon(self) -> None:
         """
         Applies multiplicative epsilon decay with a fixed minimum.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     def _sync_target_network(self) -> None:
         """
         Copies policy network weights to the target network.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         self.target_net.load_state_dict(self.policy_net.state_dict())
 
@@ -83,11 +95,11 @@ class D3QNAgent:
         Selects an action using epsilon greedy exploration.
 
         Args:
-            state (np.ndarray): Current state.
+            state (np.ndarray): Current environment observation (C, H, W).
             explore (bool): Whether to use epsilon greedy exploration.
 
         Returns:
-            int: Selected action.
+            int: The index of the selected discrete action.
         """
         if explore and np.random.rand() < self.epsilon:
             return int(np.random.randint(self.num_actions))
@@ -107,12 +119,12 @@ class D3QNAgent:
         Computes Double DQN targets.
 
         Args:
-            rewards (torch.Tensor): Reward tensor.
-            next_states (torch.Tensor): Next state tensor.
-            dones (torch.Tensor): Done tensor.
+            rewards (torch.Tensor): Batch of transition rewards.
+            next_states (torch.Tensor): Batch of next state observations.
+            dones (torch.Tensor): Batch of terminal flags.
 
         Returns:
-            torch.Tensor: TD target tensor.
+            torch.Tensor: Computed TD target tensor.
         """
         with torch.no_grad():
             next_actions = self.policy_net(next_states).argmax(dim=1, keepdim=True)
@@ -133,16 +145,16 @@ class D3QNAgent:
         Runs a single gradient update from a batch.
 
         Args:
-            states (np.ndarray): Batch of states.
-            actions (np.ndarray): Batch of actions.
-            rewards (np.ndarray): Batch of rewards.
-            next_states (np.ndarray): Batch of next states.
-            dones (np.ndarray): Batch of done flags.
-            weights (Optional[np.ndarray]): Optional PER importance weights.
+            states (np.ndarray): Batch of input state observations.
+            actions (np.ndarray): Batch of performed actions.
+            rewards (np.ndarray): Batch of transition rewards.
+            next_states (np.ndarray): Batch of resulting state observations.
+            dones (np.ndarray): Batch of episode termination flags.
+            weights (Optional[np.ndarray]): Optional Importance Sampling weights for PER.
 
         Returns:
             Tuple[float, np.ndarray]:
-                Scalar loss value and TD error array.
+                Scalar float loss value and numpy array of TD errors.
         """
         states_t = torch.as_tensor(states, dtype=torch.float32, device=self.device)
         actions_t = torch.as_tensor(actions, dtype=torch.long, device=self.device)
@@ -181,14 +193,14 @@ class D3QNAgent:
         Stores the latest transition and learns immediately from it.
 
         Args:
-            state (np.ndarray): Current state.
-            action (int): Selected action.
-            reward (float): Received reward.
-            next_state (np.ndarray): Next state.
-            done (bool): Terminal flag.
+            state (np.ndarray): Current state observation.
+            action (int): Index of selected action.
+            reward (float): Scalar reward received.
+            next_state (np.ndarray): Resulting state observation.
+            done (bool): Whether the episode ended.
 
         Returns:
-            Optional[float]: Loss value from the update.
+            Optional[float]: Float loss value if learning occurred, else None.
         """
         self.global_step += 1
 
@@ -208,10 +220,13 @@ class D3QNAgent:
 
     def save(self, filepath: str) -> None:
         """
-        Saves the policy network checkpoint.
+        Saves the policy network checkpoint to disk.
 
         Args:
-            filepath (str): Output file path.
+            filepath (str): Full destination file path for the .pth file.
+
+        Returns:
+            None
         """
         torch.save(self.get_checkpoint_state(), filepath)
 

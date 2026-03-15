@@ -223,12 +223,15 @@ def plot_overlay(
     Plots the same metric for multiple agents on a single figure.
 
     Args:
-        histories (Dict[str, Dict]): Mapping of agent names to history dictionaries.
-        save_path (str): Output image path.
-        metric_key (str): History key to plot.
-        title (str): Plot title.
-        ylabel (str): Y-axis label.
-        window (int): Moving average window.
+        histories (Dict[str, Dict]): Mapping of agent names to their respective history dictionaries.
+        save_path (str): Full output file path for the image.
+        metric_key (str): The specific history key to plot (e.g., 'episode_rewards').
+        title (str): Title displayed on the plot.
+        ylabel (str): Label for the y-axis.
+        window (int): Moving average smoothing window size.
+
+    Returns:
+        None
     """
     plt.figure(figsize=(10, 5))
     for agent_name, history in histories.items():

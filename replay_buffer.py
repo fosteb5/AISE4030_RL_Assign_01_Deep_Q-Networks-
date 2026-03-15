@@ -60,7 +60,7 @@ class ReplayBuffer:
 
         Returns:
             tuple:
-                states, actions, rewards, next_states, dones
+                A tuple containing (states (np.ndarray), actions (np.ndarray), rewards (np.ndarray), next_states (np.ndarray), dones (np.ndarray)).
         """
         batch = random.sample(self.buffer, batch_size)
         states, actions, rewards, next_states, dones = zip(*batch)

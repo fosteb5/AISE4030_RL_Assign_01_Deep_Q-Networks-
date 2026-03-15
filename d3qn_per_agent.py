@@ -47,10 +47,13 @@ class D3QNPERAgent(D3QNAgent):
 
     def _get_beta(self) -> float:
         """
-        Computes the current beta value by linear annealing.
+        Computes the current beta value for importance sampling by linear annealing.
+
+        Args:
+            None
 
         Returns:
-            float: Current beta parameter.
+            float: Current beta parameter value between beta_start and beta_end.
         """
         fraction = min(1.0, self.global_step / self.total_anneal_steps)
         return self.beta_start + fraction * (self.beta_end - self.beta_start)
@@ -65,17 +68,17 @@ class D3QNPERAgent(D3QNAgent):
     ) -> Optional[float]:
         """
         Stores the transition, samples prioritized mini batches,
-        applies importance weights, and updates priorities.
+        applies importance weights, and updates priorities in the Sum Tree.
 
         Args:
-            state (np.ndarray): Current state.
-            action (int): Selected action.
-            reward (float): Received reward.
-            next_state (np.ndarray): Next state.
-            done (bool): Terminal flag.
+            state (np.ndarray): Current state observation.
+            action (int): Index of selected action.
+            reward (float): Received reward value.
+            next_state (np.ndarray): Resulting state observation.
+            done (bool): Terminal status of the episode.
 
         Returns:
-            Optional[float]: Loss value if learning occurred, else None.
+            Optional[float]: Float loss value if learning occurred, else None.
         """
         self.global_step += 1
 

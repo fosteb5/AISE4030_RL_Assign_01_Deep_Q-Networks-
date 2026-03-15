@@ -111,7 +111,7 @@ class MarioRewardWrapper(gym.Wrapper):
         self.prev_x = current_x
 
         progress_reward = self.progress_scale * float(delta_x)
-        reward = max(progress_reward, 0.0) if delta_x > 0 else progress_reward
+        reward = max(progress_reward, 0.0)
         reward += self.time_penalty
 
         died = terminated and not bool(info.get("flag_get", False))
@@ -167,11 +167,11 @@ class StagnationTerminationWrapper(gym.Wrapper):
         Steps the environment and truncates if Mario stagnates for too long.
 
         Args:
-            action (int): Selected action.
+            action (int): Index of the selected discrete action.
 
         Returns:
             Tuple[np.ndarray, float, bool, bool, dict]:
-                Observation, reward, terminated, truncated, info.
+                State observation (np.ndarray), reward (float), terminated (bool), truncated (bool), info (dict).
         """
         obs, reward, terminated, truncated, info = _step_compat(self.env, action)
 
@@ -258,10 +258,10 @@ class GrayScaleObservation(gym.ObservationWrapper):
         Converts an RGB frame to grayscale.
 
         Args:
-            observation (np.ndarray): RGB observation.
+            observation (np.ndarray): RGB input observation of shape (H, W, 3).
 
         Returns:
-            np.ndarray: Grayscale observation.
+            np.ndarray: Grayscale observation of shape (H, W).
         """
         gray = cv2.cvtColor(observation, cv2.COLOR_RGB2GRAY)
         return gray.astype(np.uint8)
@@ -294,10 +294,10 @@ class ResizeObservation(gym.ObservationWrapper):
         Resizes and normalizes the observation.
 
         Args:
-            observation (np.ndarray): Grayscale observation.
+            observation (np.ndarray): Grayscale input observation.
 
         Returns:
-            np.ndarray: Resized normalized observation.
+            np.ndarray: Resized normalized observation of shape (shape, shape).
         """
         resized = cv2.resize(observation, (self.shape, self.shape), interpolation=cv2.INTER_AREA)
         resized = resized.astype(np.float32) / 255.0
@@ -408,12 +408,12 @@ def make_mario_env(
     )
 
     env = JoypadSpace(env, RIGHT_ONLY)
-    env = MarioRewardWrapper(env)
     env = SkipFrame(env, skip=frame_skip)
-    env = StagnationTerminationWrapper(env)
     env = GrayScaleObservation(env)
     env = ResizeObservation(env, shape=84)
     env = FrameStackObservation(env, num_stack=4)
+    env = MarioRewardWrapper(env)
+    env = StagnationTerminationWrapper(env)
 
     if seed is not None:
         _reset_compat(env, seed=seed)

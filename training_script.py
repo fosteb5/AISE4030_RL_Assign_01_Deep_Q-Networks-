@@ -122,13 +122,13 @@ def try_resume_training(agent, config: Dict, results_dir: str):
     Attempts to resume training from the latest matching checkpoint.
 
     Args:
-        agent: Active agent instance.
-        config (Dict): Full configuration.
+        agent: Active agent instance (D3QNAgent or variant).
+        config (Dict): Full configuration dictionary.
         results_dir (str): Results directory for the selected agent.
 
     Returns:
-        tuple[int, Dict | None]:
-            starting episode index and restored history if resume succeeds.
+        tuple[int, Dict | None, str | None]:
+            Starting episode index (int), restored history (Dict | None), and checkpoint path (str | None).
     """
     checkpoint_path = find_latest_checkpoint(results_dir)
     if checkpoint_path is None:

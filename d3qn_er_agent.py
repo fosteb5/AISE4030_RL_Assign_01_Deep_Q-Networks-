@@ -43,14 +43,14 @@ class D3QNERAgent(D3QNAgent):
         Stores the transition and learns from a uniform random mini batch.
 
         Args:
-            state (np.ndarray): Current state.
-            action (int): Selected action.
-            reward (float): Received reward.
-            next_state (np.ndarray): Next state.
-            done (bool): Terminal flag.
+            state (np.ndarray): Current state observation.
+            action (int): Index of selected action.
+            reward (float): Received reward value.
+            next_state (np.ndarray): Resulting state observation.
+            done (bool): Terminal flag for the episode.
 
         Returns:
-            Optional[float]: Loss value if learning occurred, else None.
+            Optional[float]: Float loss value if learning occurred, else None.
         """
         self.global_step += 1
         self.replay_buffer.add(state, action, reward, next_state, done)

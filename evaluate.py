@@ -13,25 +13,66 @@ from d3qn_network import D3QNNetwork
 from environment import make_mario_env
 
 
-def load_model(model_path: str, state_shape: tuple, num_actions: int, device: torch.device) -> D3QNNetwork:
-    net = D3QNNetwork(state_shape, num_actions).to(device)
-    state = torch.load(model_path, map_location=device, weights_only=False)
-    if "policy_state_dict" in state:
-        net.load_state_dict(state["policy_state_dict"])
-    else:
-        net.load_state_dict(state)
-    net.eval()
-    return net
+def load_model(
+    model_path: str,
+    state_shape: tuple,
+    num_actions: int,
+    device: torch.device,
+) -> D3QNNetwork:
+    """
+    Loads saved model weights into the target architecture.
+
+    Args:
+        model_path (str): Path to the .pth checkpoint file.
+        state_shape (tuple): Shape of the input observation.
+        num_actions (int): Number of discrete environment actions.
+        device (torch.device): Device to load the model onto.
+
+    Returns:
+        D3QNNetwork: The loaded network in evaluation mode.
+    """
 
 
-def select_action(net: D3QNNetwork, state: np.ndarray, device: torch.device) -> int:
+def select_action(
+    net: D3QNNetwork,
+    state: np.ndarray,
+    device: torch.device,
+) -> int:
+    """
+    Greedy action selection for evaluation.
+
+    Args:
+        net (D3QNNetwork): The evaluation network.
+        state (np.ndarray): The current environment observation.
+        device (torch.device): Device to perform computations on.
+
+    Returns:
+        int: The index of the action with the maximum Q-value.
+    """
     state_tensor = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
     with torch.no_grad():
         q_values = net(state_tensor)
     return int(torch.argmax(q_values, dim=1).item())
 
 
-def run(model_path: str, config_path: str, episodes: int, delay: float) -> None:
+def run(
+    model_path: str,
+    config_path: str,
+    episodes: int,
+    delay: float,
+) -> None:
+    """
+    Main evaluation loop.
+
+    Args:
+        model_path (str): Path to model file.
+        config_path (str): Path to configuration file.
+        episodes (int): Number of episodes to play.
+        delay (float): Seconds to wait between frames.
+
+    Returns:
+        None
+    """
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
